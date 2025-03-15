@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Icon=harbour-sailtube
+Name=SailTube
+
+MimeType=x-scheme-handler/http;x-scheme-handler/https;
+X-Maemo-Service=cz.kuba77.harbour-sailtube
+X-Maemo-Object-Path=/cz/kuba77/harbour-sailtube
+X-Maemo-Method=cz.kuba77.harbour-sailtube.openUrl
+
+NotShowIn=X-MeeGo;
+Hidden=true
+X-Desktop-File-Install-Version=0.26
