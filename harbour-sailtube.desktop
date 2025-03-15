@@ -1,0 +1,21 @@
+[Desktop Entry]
+Type=Application
+X-Nemo-Application-Type=silica-qt5
+Icon=harbour-sailtube
+Exec=sailfish-qml harbour-sailtube
+Name=SailTube
+# translation example:
+# your app name in German locale (de)
+#
+# Remember to comment out the following line, if you do not want to use
+# a different app name in German locale (de).
+#Name[de]=harbour-sailtube
+X-Desktop-File-Install-Version=0.23
+
+[X-HarbourBackup]
+BackupPathList=.local/share/cz.kuba77/harbour-sailtube/
+
+[X-Sailjail]
+Permissions=Internet;Videos;Audio;WebView,Bluetooth
+OrganizationName=cz.kuba77
+ApplicationName=harbour-sailtube
