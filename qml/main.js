@@ -57,7 +57,7 @@ function httpRequest2(method, url, callback) {
 }
 
 function search(query,type) { //iteroni.com
-    return url = "https://invidious.fdn.fr/api/v1/search?q="+query+"&region=CZ&type="+type
+    return url = getInvInstance()+"/api/v1/search?q="+query+"&region=CZ&type="+type
 }
 
 function getDatabase() {
@@ -77,6 +77,7 @@ function addItem(videoid,title,service) {
             res = "OK";
             console.log("Saved to database - "+videoid+" "+title+" "+service);
         } else {
+            tx.executeSql('CREATE TABLE IF NOT EXISTS history(videoid TEXT, title TEXT, service INTEGER)');
             res = "Error";
             //console.log("Error of saving");
         }
@@ -103,6 +104,7 @@ function deleteItemVI(id) {
     var db = getDatabase();
     var res = ""
     db.transaction(function(tx) {
+        tx.executeSql('CREATE TABLE IF NOT EXISTS history(videoid TEXT, title TEXT, service INTEGER)');
         var rs = tx.executeSql('DELETE FROM history WHERE videoid=?', [id]);
 
         if (rs.rowsAffected > 0) {
@@ -208,9 +210,13 @@ function getInstance(callback) {
 }
 
 function getInvInstance() {
+//	return "https://invidious.reallyaweso.me"
+//	return "https://invidious.nerdvpn.de"
+//	return "https://invidious.f5.si"
 //	return "https://invidious.privacyredirect.com"
-	return "https://nyc1.iv.ggtyler.dev"
+//	return "https://nyc1.iv.ggtyler.dev"
 //	return "https://inv.nadeko.net"
 //	return "https://invidious.privacyredirect.com"
 //	return "https://invidious.perennialte.ch"
+    return "https://invidious.reallyaweso.me"
 }
