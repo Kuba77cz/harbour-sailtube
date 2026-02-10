@@ -16,6 +16,7 @@ X-Desktop-File-Install-Version=0.23
 BackupPathList=.local/share/cz.kuba77/harbour-sailtube/
 
 [X-Sailjail]
-Permissions=Internet;Videos;Audio;WebView,Bluetooth
-OrganizationName=cz.kuba77
-ApplicationName=harbour-sailtube
+#Permissions=Internet;Videos;Audio;WebView,Bluetooth
+#OrganizationName=cz.kuba77
+#ApplicationName=harbour-sailtube
+Sandboxing=Disabled
