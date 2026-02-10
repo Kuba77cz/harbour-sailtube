@@ -24,7 +24,7 @@ def get_stream_url(url):
     if not ytdlp:
         return {
             "ok": False,
-            "error": "yt-dlp nenalezen (PATH ani ~/.local/bin)"
+            "error": "yt-dlp not found"
         }
 
     try:
@@ -47,7 +47,7 @@ def get_stream_url(url):
         if not stream:
             return {
                 "ok": False,
-                "error": "yt-dlp vrátil prázdnou URL"
+                "error": "yt-dlp returns empty URL"
             }
 
         return {
@@ -66,7 +66,7 @@ def download_video(url, outpath):
     if not ytdlp:
         return {
             "ok": False,
-            "error": "yt-dlp nenalezen (PATH ani ~/.local/bin)"
+            "error": "yt-dlp not found"
         }
 
     try:
