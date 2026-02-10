@@ -136,7 +136,7 @@ arguments)
         anchors.fill: parent
         
         // PullDownMenu and PushUpMenu must be declared in SilicaFlickable, SilicaListView or SilicaGridView
-        PullDownMenu {
+        /*PullDownMenu {
             MenuItem {
                 text: qsTr("Trending gaming")
                 onClicked: pageStack.push(Qt.resolvedUrl("Trending.qml"), {type: "gaming"})
@@ -157,7 +157,7 @@ arguments)
                 text: qsTr("Trending")
                 onClicked: pageStack.push(Qt.resolvedUrl("Trending.qml"), {type: ""})
             }
-        }
+        }*/
 
 
         TabView {

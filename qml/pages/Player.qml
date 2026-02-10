@@ -2,16 +2,47 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import QtMultimedia 5.6
 import QtQuick.LocalStorage 2.0
+import io.thp.pyotherside 1.5
 import "../main.js" as JS
 
 Page {
     id: page
 
     property string videoId
-    property string videoUrl
     property string name
+    property string videoUrl: ""
 
     Component.onCompleted: {
+        JS.deleteItemVI(videoId)
+        JS.addItem(videoId,name,0)
+        loadStream(videoId)
+    }
+
+
+    Python {
+        id: py
+        Component.onCompleted: {
+            addImportPath(Qt.resolvedUrl("../python"))
+            importModule("backend", function() {
+                console.log("Python backend loaded")
+            })
+        }
+    }
+
+    // call backend for direct stream
+    function loadStream(youtubeUrl) {
+        py.call("backend.get_stream_url", ["https://youtube.com/watch?v="+youtubeUrl], function(res) {
+            if (res.ok) {
+                videoUrl = res.url
+                player.source = res.url
+                player.play()
+            } else {
+                console.log("yt-dlp error", res.error)
+             }
+        })
+    }
+    
+/*Component.onCompleted: {
         indicatior.running = true
         //JS.deleteItemVI(videoId)
        	//JS.addItem(videoId,name,0)
@@ -42,7 +73,7 @@ Page {
 
         indicatior.running = false
         //return r;
-    }
+    }*/
 
     BusyIndicator {
         id: indicatior
@@ -69,7 +100,7 @@ Page {
             }
         }*/
         Video {
-              id: video
+              id: player
               width : parent.width
               height : parent.height
 
@@ -93,14 +124,14 @@ Page {
               MouseArea {
                   anchors.fill: parent
                   onClicked: {
-                      video.playbackState === MediaPlayer.PlayingState ? video.pause() : video.play()
+                      player.playbackState === MediaPlayer.PlayingState ? player.pause() : player.play()
                   }
               }
 
               focus: true
-              Keys.onSpacePressed: video.playbackState === MediaPlayer.PlayingState ? video.pause() : video.play()
-              Keys.onLeftPressed: video.seek(video.position - 5000)
-              Keys.onRightPressed: video.seek(video.position + 5000)
+              Keys.onSpacePressed: player.playbackState === MediaPlayer.PlayingState ? player.pause() : player.play()
+              Keys.onLeftPressed: player.seek(player.position - 5000)
+              Keys.onRightPressed: player.seek(player.position + 5000)
           }
         /*Slider {
                 id: slider
