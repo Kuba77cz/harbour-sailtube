@@ -7,7 +7,7 @@ user = os.getenv('USER')
 # Fallback cesty k yt-dlp
 YTDLP_CANDIDATES = [
     f"/home/{user}/.local/bin/yt-dlp",  # user install
-    "/usr/share/harbour-sailtube/bin/yt-dlp"  # bundled in app (volitelné)
+    "/usr/share/harbour-sailtube/bin/yt-dlp"  # bundled in app
     #"yt-dlp",  # PATH
 ]
 
