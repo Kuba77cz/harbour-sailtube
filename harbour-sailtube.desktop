@@ -13,7 +13,7 @@ Name=SailTube
 X-Desktop-File-Install-Version=0.23
 
 [X-HarbourBackup]
-BackupPathList=.local/share/cz.kuba77/harbour-sailtube/
+BackupPathList=.local/share/harbour-sailtube/
 
 [X-Sailjail]
 #Permissions=Internet;Videos;Audio;WebView,Bluetooth

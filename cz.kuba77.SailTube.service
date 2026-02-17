@@ -1,0 +1,3 @@
+[D-BUS Service]
+Name=cz.kuba77.SailTube
+Exec=/usr/bin/sailfish-qml harbour-sailtube
