@@ -1,22 +1,15 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-import io.thp.pyotherside 1.5
 import QtQuick.LocalStorage 2.0
+import io.thp.pyotherside 1.5
 import "../main.js" as JS
 
 Page {
     id: page
-    property string authorId
+    property string query
     property string link
-    property string authorName
-    property string videoUrl
-    property string origUrl
-    property string domain: JS.getInvInstance()
 
-    Component.onCompleted: {
-        indicatior.running = true
-        loadLatest(authorId)
-    }
+    //property string userRegion: Qt.locale().name.split("_")[1] || "US" // eg. "CZ" or fallback "US"
 
     Python {
         id: py
@@ -24,16 +17,21 @@ Page {
             addImportPath(Qt.resolvedUrl("../python"))
             importModule("backend", function() {
                 console.log("Python backend loaded")
+                indicatior.running = true
+                search(query)   // <-- až po loadu backendu
+                print("search query:", query)
             })
         }
     }
 
-    function loadLatest(authorId) {
-        py.call("backend.get_channel_latest", [authorId, 20], function(res) {
+    function search(query) {
+        indicatior.running = true
+
+        py.call("backend.search_videos", [query, 20], function(res) {
             indicatior.running = false
 
             if (!res.ok) {
-                console.log("yt-dlp error:", res.error)
+                console.log("yt-dlp search error:", res.error)
                 return
             }
 
@@ -42,12 +40,17 @@ Page {
             for (var i = 0; i < res.videos.length; i++) {
                 var v = res.videos[i]
                 myJSModel.append({
-                                     "id": v.videoId,
+                                     "videoid": v.videoId,
                                      "title": v.title,
-                                     "videolength": v.lengthSeconds
-                                     //"datepub": v.publishedText
+                                     "authorName": v.author,
+                                     "id": v.authorId,
+                                     "videolength": v.lengthSeconds,
+                                     //"thumbnail": v.thumbnail
                                  })
             }
+
+            console.log("searching for:", query)
+
         })
     }
 
@@ -75,7 +78,7 @@ Page {
             }
             header: PageHeader {
                 id: header
-                title: authorName + " - latest"
+                title: qsTr("Results of: ")+query
             }
             delegate: ListItem {
                 id: column
@@ -84,11 +87,10 @@ Page {
 
                 Image {
                     id: img
-                    source: domain+"/vi/"+id+"/mqdefault.jpg"
+                    source: JS.getInvInstance()+"/vi/"+videoid+"/mqdefault.jpg"
                     width: Theme.iconSizeExtraLarge * 1.5
                     height: Theme.iconSizeExtraLarge * 1.5
                     fillMode: Image.PreserveAspectFit
-
                     anchors {
                         left: parent.left
                         leftMargin: Theme.horizontalPageMargin
@@ -122,15 +124,13 @@ Page {
                         color: Theme.primaryColor
                     }
                 }
-
                 Label {
-                    text: title
+                    text: title + "\n" + authorName
                     width: column.width - 92
                     font.pixelSize: Theme.fontSizeSmall
                     truncationMode: TruncationMode.Fade
                     maximumLineCount: 3
                     wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-
                     anchors {
                         left: img.right
                         leftMargin: Theme.horizontalPageMargin
@@ -144,7 +144,7 @@ Page {
                     MenuItem {
                         text: qsTr("Add to favorite")
                         onClicked: {
-                            JS.addFavItem(list.model.get(index).id, list.model.get(index).title, list.model.get(index).service)
+                            JS.addFavItem(list.model.get(index).videoid, list.model.get(index).title, list.model.get(index).service)
                         }
                     }
                     MenuItem {
@@ -156,20 +156,26 @@ Page {
                     MenuItem {
                         text: qsTr("Open audio only")
                         onClicked: {
-                            pageStack.push(Qt.resolvedUrl("YT.qml"), {videoId: list.model.get(index).id, name: list.model.get(index).title, mode: "audio"});
+                            pageStack.push(Qt.resolvedUrl("YT.qml"), {videoId: list.model.get(index).videoid, name:
+                                               list.model.get(index).title, mode: "audio"});
+                        }
+                    }
+                    MenuItem {
+                        text: qsTr("Open channel")
+                        onClicked: {
+                            pageStack.push(Qt.resolvedUrl("ChannelLatest.qml"), {authorId: list.model.get(index).id, authorName: list.model.get(index).authorName});
                         }
                     }
                     MenuItem {
                         text: qsTr("Open link externally")
                         onClicked: {
-                            link = "https://youtube.com/watch?v="+list.model.get(index).id
+                            link = "https://youtube.com/watch?v="+list.model.get(index).videoid
                             Qt.openUrlExternally(link);
                         }
                     }
-
                 }
                 onClicked: {
-                    pageStack.push(Qt.resolvedUrl("YT.qml"), {videoId: list.model.get(index).id, name: list.model.get(index).title });
+                    pageStack.push(Qt.resolvedUrl("YT.qml"), {videoId: list.model.get(index).videoid, name: list.model.get(index).title});
                 }
             }
             VerticalScrollDecorator {}

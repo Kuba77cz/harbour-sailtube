@@ -12,9 +12,7 @@ Page {
 
     Component.onCompleted: {
         indicatior.running = true
-        var url;
-        url = "https://peertube.arch-linux.cz/api/v1/accounts/archlinuxcz/videos"
-        //url = "http://iteroni.com/api/v1/channels/"+authorId+"/latest" //latest
+        var url = "https://peertube.arch-linux.cz/api/v1/accounts/archlinuxcz/videos"
         console.log(url)
         JS.httpRequest("GET", url, processData)
     }
@@ -59,13 +57,13 @@ Page {
             delegate: ListItem {
                 id: column
                 width: parent.width
-                contentHeight: Theme.itemSizeMedium
+                contentHeight: Theme.itemSizeExtraLarge
 
                 Image {
                     id: img
                     source: "https://peertube.arch-linux.cz" + thumbnail
-                    width: Theme.iconSizeLarge
-                    height: Theme.iconSizeLarge
+                    width: Theme.iconSizeExtraLarge * 1.5
+                    height: Theme.iconSizeExtraLarge * 1.5
                     fillMode: Image.PreserveAspectFit
                     anchors {
                         left: parent.left
@@ -80,6 +78,9 @@ Page {
                     width: column.width - 92
                     font.pixelSize: Theme.fontSizeSmall
                     truncationMode: TruncationMode.Fade
+                    maximumLineCount: 3
+                    wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+
                     anchors {
                         left: img.right
                         leftMargin: Theme.horizontalPageMargin
@@ -91,33 +92,27 @@ Page {
 
                 menu: ContextMenu {
                     MenuItem {
-                        text: qsTr("Otevřít externě")
+                        text: qsTr("Audio only")
                         onClicked: {
-                            link = "https://invidious.fdn.fr/watch?v="+list.model.get(index).id
-                            Qt.openUrlExternally(link);
+                            pageStack.push(Qt.resolvedUrl("PT.qml"), {videoId: list.model.get(index).videoid, name: list.model.get(index).title, mode: "audio"});
                         }
                     }
                     MenuItem {
-                        text: qsTr("Otevřít externě pouze zvuk")
+                        text: qsTr("Copy link to clipboard")
                         onClicked: {
-                            link = "https://invidious.fdn.fr/watch?v="+list.model.get(index).id+"&listen=1"
-                            Qt.openUrlExternally(link);
+                            Clipboard.text = "https://peertube.arch-linux.cz/w/"+list.model.get(index).videoid
                         }
                     }
                     MenuItem {
-                        text: qsTr("Otevřít na Youtube")
+                        text: qsTr("Open link externally")
                         onClicked: {
-                                link = "https://youtube.com/watch?v="+list.model.get(index).id
-                                Qt.openUrlExternally(link);
+                            var link = "https://peertube.arch-linux.cz/w/"+list.model.get(index).videoid
+                            Qt.openUrlExternally(link);
                         }
-                     }
-
+                    }
                 }
                 onClicked: {
-			pageStack.push(Qt.resolvedUrl("PlayerPT.qml"), {videoId: list.model.get(index).id, name: list.model.get(index).title});
-			//pageStack.push(Qt.resolvedUrl("Player.qml"), {videoId: list.model.get(index).id, name: list.model.get(index).title });
-                    //pageStack.push(Qt.resolvedUrl("WebView.qml"), {videoId: list.model.get(index).id, artistName: list.model.get(index).title });
-                    //pageStack.push(Qt.resolvedUrl("ChannelLatest.qml"), {authorId: list.model.get(index).id, authorName: list.model.get(index).authorId});
+                    pageStack.push(Qt.resolvedUrl("PT.qml"), {videoId: list.model.get(index).id, name: list.model.get(index).title});
                 }
             }
             VerticalScrollDecorator {}

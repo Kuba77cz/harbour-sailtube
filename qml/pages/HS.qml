@@ -5,7 +5,7 @@ import QtQuick.LocalStorage 2.0
 import "../main.js" as JS
 
 TabItem {
-    id: sa
+    id: hs
 
     property alias flickable: flickable
     property string id_txt
@@ -14,28 +14,17 @@ TabItem {
     property string imageurl
 
     anchors.fill: parent
-    
-    function send() {
-        switch (cbType.currentIndex)
-        {
-        case 0: type = 0; pageStack.push(Qt.resolvedUrl("Search.qml"), {query: searchfield.text, type2: type }); break;
-        case 1: type = 1; pageStack.push(Qt.resolvedUrl("SearchChannel.qml"), {query: searchfield.text, type2: type }); break;
-        //case 3: type = 3; break;
-        default: type = 0; break;
-        }
-        console.log(type)
-    }
-   
+
     function processData(data, imageElement) {
         var json = data;
         var obj = JSON.parse(json);
         //var ="";
-	if (obj.thumbnailPath.length > 0) {
-	    imageurl = "https://peertube.arch-linux.cz" + obj.thumbnailPath;
-	    imageElement.source = imageurl;
-	    return imageurl;
-	}
-    } 
+        if (obj.thumbnailPath.length > 0) {
+            imageurl = "https://peertube.arch-linux.cz" + obj.thumbnailPath;
+            imageElement.source = imageurl;
+            return imageurl;
+        }
+    }
 
     function refresh(){
         myJSModel.clear()
@@ -77,20 +66,20 @@ TabItem {
             delegate: ListItem{
                 id: column
                 width: parent.width
-                contentHeight: Theme.itemSizeMedium
-                
+                contentHeight: Theme.itemSizeExtraLarge
+
                 Image {
                     id: img
                     source: {
                         if (list.model.get(index).service === 1) {
-			    var url = "https://peertube.arch-linux.cz/api/v1/videos/"+videoid
-                            JS.httpRequest("GET", url, function(response) { processData(response, img);});
+                            var url = "https://peertube.arch-linux.cz/api/v1/videos/"+videoid
+                            JS.httpRequest("GET", url, function(response) { JS.processData(response, img);});
                         } else {
                             JS.getInvInstance()+"/vi/"+videoid+"/mqdefault.jpg"
                         }
                     }
-                    width: Theme.iconSizeExtraLarge
-                    height: Theme.iconSizeExtraLarge
+                    width: Theme.iconSizeExtraLarge * 1.5
+                    height: Theme.iconSizeExtraLarge * 1.5
                     fillMode: Image.PreserveAspectFit
                     anchors {
                         left: parent.left
@@ -105,6 +94,7 @@ TabItem {
                     width: column.width - 92
                     font.pixelSize: Theme.fontSizeSmall
                     truncationMode: TruncationMode.Fade
+                    maximumLineCount: 3
                     wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                     anchors {
                         left: img.right
@@ -117,41 +107,78 @@ TabItem {
 
                 menu: ContextMenu {
                     MenuItem {
-                        text: qsTr("Open audio only")
-                        onClicked: {
-				if (list.model.get(index).service === 1) {  
-                    			pageStack.push(Qt.resolvedUrl("AudioPlayerPT.qml"), {audioId: list.model.get(index).videoid, name: list.model.get(index).title, service: list.model.get(index).service});
-                        	} else {
-					pageStack.push(Qt.resolvedUrl("AudioPlayer.qml"), {audioId: list.model.get(index).videoid, name: list.model.get(index).title});
-				}
-			}
-                    }
-                    MenuItem {
                         text: qsTr("Add to favorite")
                         onClicked: {
-                            //id_txt = list.model.get(index).rowid
-                            JS.addFavItem(list.model.get(index).videoid, list.model.get(index).title, list.model.get(index).service)
+                            if (list.model.get(index).service === 1) {
+                                JS.addFavItem(list.model.get(index).videoid, list.model.get(index).title,
+                                              list.model.get(index).service)
+                            } else {
+                                JS.addFavItem(list.model.get(index).videoid, list.model.get(index).title, list.model.get(index).service)
+                            }
                         }
                     }
                     MenuItem {
-                        text: qsTr("Delete")
+                        text: qsTr("Copy link to clipboard")
+                        onClicked: {
+                            if (list.model.get(index).service === 1) {
+                                Clipboard.text = "https://peertube.arch-linux.cz/w/"+list.model.get(index).videoid
+                            } else {
+                                Clipboard.text = "https://youtube.com/watch?v="+list.model.get(index).videoid
+                            }
+
+                        }
+                    }
+                    MenuItem {
+                        text: qsTr("Open audio only")
+                        onClicked: {
+                            if (list.model.get(index).service === 1) {
+                                pageStack.push(Qt.resolvedUrl("PT.qml"), {videoId: list.model.get(index).videoid, name: list.model.get(index).title, mode: "audio"});
+                            } else {
+                                pageStack.push(Qt.resolvedUrl("YT.qml"), {videoId: list.model.get(index).videoid, name:
+                                                   list.model.get(index).title, mode: "audio"});
+                            }
+                        }
+                    }
+                    MenuItem {
+                        text: qsTr("Open channel")
+                        onClicked: {
+                            pageStack.push(Qt.resolvedUrl("ChannelLatest.qml"), {authorId: list.model.get(index).id, authorName: list.model.get(index).authorName});
+                        }
+                    }
+                    MenuItem {
+                        text: qsTr("Open link externally")
+                        onClicked: {
+                            var link;
+                            if (list.model.get(index).service === 1) {
+                                link = "https://peertube.arch-linux.cz/w/"+list.model.get(index).videoid
+                                Qt.openUrlExternally(link);
+                            } else {
+                                link = "https://youtube.com/watch?v="+list.model.get(index).videoid
+                                Qt.openUrlExternally(link);
+                            }
+
+                        }
+                    }
+                    MenuItem {
+                        text: qsTr("Remove from history")
                         onClicked: {
                             id_txt = list.model.get(index).rowid
                             deleteRemorse.execute("Deleting "+list.model.get(index).title)
                             JS.deleteItem(id_txt)
                         }
                     }
+
                 }
                 onClicked: {
                     JS.deleteItem(list.model.get(index).rowid)
-		    //if (list.model.get(index).source ) {
- 	            if (list.model.get(index).service === 1) {
-            pageStack.push(Qt.resolvedUrl("PlayerPT.qml"), {videoId: list.model.get(index).videoid, name: list.model.get(index).title, service: list.model.get(index).service});
-        	    } else {
-            pageStack.push(Qt.resolvedUrl("Player.qml"), {videoId: list.model.get(index).videoid, name: list.model.get(index).title});
-        }
+                    //if (list.model.get(index).source ) {
+                    if (list.model.get(index).service === 1) {
+                        pageStack.push(Qt.resolvedUrl("PT.qml"), {videoId: list.model.get(index).videoid, name: list.model.get(index).title, service: list.model.get(index).service});
+                    } else {
+                        pageStack.push(Qt.resolvedUrl("YT.qml"), {videoId: list.model.get(index).videoid, name: list.model.get(index).title});
+                    }
 
-                   // pageStack.push(Qt.resolvedUrl("Player.qml"), {videoId: list.model.get(index).videoid, name: list.model.get(index).title});
+                    // pageStack.push(Qt.resolvedUrl("YT.qml"), {videoId: list.model.get(index).videoid, name: list.model.get(index).title});
                     myJSModel.clear()
                     JS.getAllItems()
                 }
@@ -169,8 +196,8 @@ TabItem {
                     JS.getAllItems()
                 }
             }
-        }  
-
-
         }
+
+
     }
+}

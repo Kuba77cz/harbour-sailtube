@@ -7,12 +7,14 @@ Page {
     property string query
     property string link
 
+    property string userRegion: Qt.locale().name.split("_")[1] || "US" // eg. "CZ" or fallback "US"
 
     Component.onCompleted: {
         indicatior.running = true
         var url;
-	var domain = JS.getInvInstance()
-        url = domain+"/api/v1/search?q="+query+"&region=CZ&type=channel"
+        var domain = JS.getInvInstance()
+        var region = userRegion || "US";
+        url = domain+"/api/v1/search?q="+query+"&region="+region+"&type=channel"
         console.log(url)
         JS.httpRequest("GET", url, processData)
     }
@@ -86,22 +88,6 @@ Page {
                     }
                 }
 
-//                menu: ContextMenu {
-//                    MenuItem {
-//                        text: qsTr("Otevřít externě")
-//                        onClicked: {
-//                            link = "https://iteroni.com/watch?v="+list.model.get(index).id
-//                            Qt.openUrlExternally(link);
-//                        }
-//                    }
-//                    MenuItem {
-//                        text: qsTr("Otevřít externě pouze zvuk")
-//                        onClicked: {
-//                            link = "https://iteroni.com/watch?v="+list.model.get(index).id+"&listen=1"
-//                            Qt.openUrlExternally(link);
-//                        }
-//                    }
-//                }
                 onClicked: {
                     pageStack.push(Qt.resolvedUrl("ChannelLatest.qml"), {authorId: list.model.get(index).id, authorName: list.model.get(index).author});
                 }

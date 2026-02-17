@@ -8,21 +8,16 @@ Page {
     property string query
     property string link
 
+    property string userRegion: Qt.locale().name.split("_")[1] || "US" // eg. "CZ" or fallback "US"
 
     Component.onCompleted: {
         indicatior.running = true
         var url;
-        //var domain = JS.getInstance()
-        /*if (domain !== "") {
-	   console.log(domain)
-	   url = domain+"/api/v1/search?q="+query+"&region=CZ&type=videos"
-	   JS.httpRequest("GET", url, processData)
-	}*/
-	//url = domain+"/api/v1/search?q="+query+"&region=CZ&type=videos"
-	var domain = JS.getInvInstance()
-        url = domain+"/api/v1/search?q="+query+"&region=CZ&type=videos"
-        console.log(url)
-	JS.httpRequest("GET", url, processData)
+        var domain = JS.getInvInstance()
+        var region = userRegion || "US";
+        url = domain+"/api/v1/search?q="+query+"&region="+region+"&type=videos"
+        console.log(url + " ; " + region)
+        JS.httpRequest("GET", url, processData)
     }
 
     function processData(data) {
@@ -30,8 +25,12 @@ Page {
         var obj = JSON.parse(json);
         var r="";
         for(var i = 1; i < obj.length; i++) {
-            r = { "videoid": obj[i].videoId, "title": obj[i].title, "authorName": obj[i].author, "id": obj[i].authorId }
-            myJSModel.append(r)
+            var videoLength = obj[i].lengthSeconds;
+            if (videoLength && videoLength > 0) {
+                r = { "videoid": obj[i].videoId, "title": obj[i].title, "authorName": obj[i].author, "id": obj[i].authorId,
+                    "videolength": obj[i].lengthSeconds };
+                myJSModel.append(r)
+            }
         }
 
         indicatior.running = false
@@ -69,9 +68,9 @@ Page {
 
                 Image {
                     id: img
-                    source: "https://inv.nadeko.net/vi/"+videoid+"/hqdefault.jpg"
-                    width: Theme.iconSizeExtraLarge
-                    height: Theme.iconSizeExtraLarge
+                    source: JS.getInvInstance()+"/vi/"+videoid+"/mqdefault.jpg"
+                    width: Theme.iconSizeExtraLarge * 1.5
+                    height: Theme.iconSizeExtraLarge * 1.5
                     fillMode: Image.PreserveAspectFit
                     anchors {
                         left: parent.left
@@ -81,11 +80,37 @@ Page {
                     }
                 }
 
+                Rectangle {
+                    id: lengthBadge
+
+                    anchors {
+                        right: img.right
+                        bottom: img.bottom
+                        rightMargin: Theme.paddingSmall
+                        bottomMargin: Theme.paddingSmall * 7.2
+                    }
+
+                    color: Theme.highlightDimmerColor
+                    radius: Theme.paddingSmall / 2
+                    opacity: 0.85
+
+                    width: vlength.width + Theme.paddingSmall * 2
+                    height: vlength.height + Theme.paddingSmall
+
+                    Label {
+                        id: vlength
+                        anchors.centerIn: parent
+                        text: JS.formatSeconds(videolength)
+                        font.pixelSize: Theme.fontSizeExtraSmall
+                        color: Theme.primaryColor
+                    }
+                }
                 Label {
                     text: title + "\n" + authorName
                     width: column.width - 92
                     font.pixelSize: Theme.fontSizeSmall
                     truncationMode: TruncationMode.Fade
+                    maximumLineCount: 3
                     wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                     anchors {
                         left: img.right
@@ -97,37 +122,55 @@ Page {
                 }
 
                 menu: ContextMenu {
-                   MenuItem {
+                    MenuItem {
                         text: qsTr("Add to favorite")
                         onClicked: {
-                                //id_txt = list.model.get(index).rowid
-                                JS.addFavItem(list.model.get(index).videoid, list.model.get(index).title, 
-list.model.get(index).service)
-                }
-            }
-
+                            JS.addFavItem(list.model.get(index).videoid, list.model.get(index).title, list.model.get(index).service)
+                        }
+                    }
                     MenuItem {
-                        text: qsTr("Otevřít externě na YT")
+                        text: qsTr("Copy link to clipboard")
                         onClicked: {
-                            link = "https://youtube.com/watch?v="+list.model.get(index).videoid
-                            Qt.openUrlExternally(link);
+                            Clipboard.text = "https://youtube.com/watch?v="+list.model.get(index).videoid
+                        }
+                    }
+                    MenuItem {
+                        text: qsTr("Open link externally")
+                        onClicked: {
+                            var link;
+                            if (list.model.get(index).service === 1) {
+                                link = "https://peertube.arch-linux.cz/w/"+list.model.get(index).videoid
+                                Qt.openUrlExternally(link);
+                            } else {
+                                link = "https://youtube.com/watch?v="+list.model.get(index).videoid
+                                Qt.openUrlExternally(link);
+                            }
+
                         }
                     }
                     MenuItem {
                         text: qsTr("Open audio only")
                         onClicked: {
-                    pageStack.push(Qt.resolvedUrl("AudioPlayer.qml"), {audioId: list.model.get(index).videoid, name: list.model.get(index).title});
+                            pageStack.push(Qt.resolvedUrl("YT.qml"), {videoId: list.model.get(index).videoid, name:
+                                               list.model.get(index).title, mode: "audio"});
                         }
                     }
-		    MenuItem {
-                        text: qsTr("Otevřít kanal")
+                    MenuItem {
+                        text: qsTr("Open channel")
                         onClicked: {
-		pageStack.push(Qt.resolvedUrl("ChannelLatest.qml"), {authorId: list.model.get(index).id, authorName: list.model.get(index).authorName});
+                            pageStack.push(Qt.resolvedUrl("ChannelLatest.qml"), {authorId: list.model.get(index).id, authorName: list.model.get(index).authorName});
+                        }
+                    }
+                    MenuItem {
+                        text: qsTr("Open link externally")
+                        onClicked: {
+                            link = "https://youtube.com/watch?v="+list.model.get(index).videoid
+                            Qt.openUrlExternally(link);
                         }
                     }
                 }
                 onClicked: {
-                    pageStack.push(Qt.resolvedUrl("Player.qml"), {videoId: list.model.get(index).videoid, name: list.model.get(index).title});
+                    pageStack.push(Qt.resolvedUrl("YT.qml"), {videoId: list.model.get(index).videoid, name: list.model.get(index).title, mode: "video"});
                 }
             }
             VerticalScrollDecorator {}

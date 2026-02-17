@@ -20,11 +20,11 @@ Page {
     function processData(data) {
         var json = data;
         var obj = JSON.parse(json);
-//        console.log(data)
+        //        console.log(data)
         var r="";
         for(var i = 0; i < obj.total; i++) {
-            r = { "videoid": obj.data[i].uuid, "title": obj.data[i].name, "thumbnail": 
-obj.data[i].thumbnailPath }
+            r = { "videoid": obj.data[i].uuid, "title": obj.data[i].name, "thumbnail":
+                obj.data[i].thumbnailPath }
             myJSModel.append(r)
         }
         indicatior.running = false
@@ -34,12 +34,12 @@ obj.data[i].thumbnailPath }
     function processDataV(data) {
         var json = data;
         var obj = JSON.parse(json);
-//        console.log(data)
+        //        console.log(data)
         var link="";
         var pom="";
         pom = obj.streamingPlaylists[0].playlistUrl
         link = pom.toString()
-        console.log(link) 
+        console.log(link)
         return link
     }
 
@@ -77,8 +77,8 @@ obj.data[i].thumbnailPath }
                 Image {
                     id: img
                     source: "https://peertube.arch-linux.cz" + thumbnail
-                    width: Theme.iconSizeExtraLarge
-                    height: Theme.iconSizeExtraLarge
+                    width: Theme.iconSizeExtraLarge * 1.5
+                    height: Theme.iconSizeExtraLarge * 1.5
                     fillMode: Image.PreserveAspectFit
                     anchors {
                         left: parent.left
@@ -93,6 +93,7 @@ obj.data[i].thumbnailPath }
                     width: column.width - 92
                     font.pixelSize: Theme.fontSizeSmall
                     truncationMode: TruncationMode.Fade
+                    maximumLineCount: 3
                     wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                     anchors {
                         left: img.right
@@ -107,23 +108,31 @@ obj.data[i].thumbnailPath }
                     MenuItem {
                         text: qsTr("Audio only")
                         onClicked: {
-				pageStack.push(Qt.resolvedUrl("AudioPlayerPT.qml"), {videoId: list.model.get(index).videoid, name: list.model.get(index).title});
+                            pageStack.push(Qt.resolvedUrl("PT.qml"), {videoId: list.model.get(index).videoid, name: list.model.get(index).title, mode: "audio"});
                         }
                     }
-		    MenuItem {
-                        text: qsTr("Otevřít kanal")
+                    MenuItem {
+                        text: qsTr("Copy link to clipboard")
                         onClicked: {
-		pageStack.push(Qt.resolvedUrl("ChannelLatestPT.qml"), {authorId: list.model.get(index).id, authorName: list.model.get(index).authorName});
+                            Clipboard.text = "https://peertube.arch-linux.cz/w/"+list.model.get(index).videoid
+                        }
+                    }
+                    MenuItem {
+                        text: qsTr("Open channel")
+                        onClicked: {
+                            pageStack.push(Qt.resolvedUrl("ChannelLatestPT.qml"), {authorId: list.model.get(index).id, authorName: list.model.get(index).authorName});
+                        }
+                    }
+                    MenuItem {
+                        text: qsTr("Open link externally")
+                        onClicked: {
+                            var link = "https://peertube.arch-linux.cz/w/"+list.model.get(index).videoid
+                            Qt.openUrlExternally(link);
                         }
                     }
                 }
                 onClicked: {
-                    //var urlV = 
-"https://peertube.arch-linux.cz/api/v1/videos/"+list.model.get(index).videoid
-
-                    //var linkid = JS.httpRequest("GET", urlV, processDataV)
-                    //var linkid = pom.toString()
-                    pageStack.push(Qt.resolvedUrl("PlayerPT.qml"), {videoId: list.model.get(index).videoid, name: list.model.get(index).title});
+                    pageStack.push(Qt.resolvedUrl("PT.qml"), {videoId: list.model.get(index).videoid, name: list.model.get(index).title});
                 }
             }
             VerticalScrollDecorator {}

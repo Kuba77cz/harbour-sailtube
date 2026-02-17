@@ -12,129 +12,11 @@ Page {
     property string name2
     property string url2
     property string extractedText
-
-    /*function processData(data) {
-        var json = data;
-        var obj = JSON.parse(json);
-        name2 = obj.title.toString();
-        console.log(name2);
-	//callback(name2);
-        //pageStack.push(Qt.resolvedUrl("Player.qml"), { 
-videoId: extractedText, name: name2 });
-    }*/
-
-    DBusAdaptor {
-        service: "cz.kuba77.harbour-sailtube"
-        iface: "cz.kuba77.harbour-sailtube"
-        path: "/cz/kuba77/SailTube"
-        xml: '\
-     <interface name="cz.kuba77.harbour-sailtube">
-       <method name="openPage">
-         <arg name="page" type="s" direction="in">
-           <doc:doc>
-             <doc:summary>
-               Name of the page to open
-               
-(https://github.com/mentaljam/harbour-osmscout/tree/master/qml/pages)
-             </doc:summary>
-           </doc:doc>
-         </arg>
-         <arg name="arguments" type="a{sv}" direction="in">
-           <doc:doc>
-             <doc:summary>
-               Arguments to pass to the page
-             </doc:summary>
-           </doc:doc>
-         </arg>
-       </method>
-       <method name="openUrl">
-         <arg name="url" type="s" direction="in">
-           <doc:doc>
-             <doc:summary>
-               url of map service
-             </doc:summary>
-           </doc:doc>
-         </arg>
-       </method>
-     </interface>'
-
-    function extractTextAfterEquals(inputString) {
-        // Convert to string if not already
-        var str = inputString.toString();
-        var parts = str.split('=');
-        if (parts.length > 1) {
-            return parts[1];
-        } else {
-            return "";
-        }
-    }
-
-       function openUrl(url) {
-           var urlStr = url + "";
-           var extractedText = "";
-//           console.log("open url: " + url);
-           __silica_applicationwindow_instance.activate()
-                   // go to location and even open its details...
-                   //map.showCoordinates(lat, lon);
-           var youtubeLink = url.toString();
-           console.log("Type of youtubeLink:", typeof youtubeLink);
-           //var link = youtubeLink;
-/*           if (youtubeLink.indexOf("youtu.be") !== -1) {
-                // Extract string after the last '/'
-                extractedText = youtubeLink.split("/").pop();
-           } else {
-                extractedText = extractTextAfterEquals(youtubeLink);
-           }
-*/
-           var videoIdMatch = 
-youtubeLink.match(/(?:\?v=|\/embed\/|\/\d\/|\/vi\/|\/e\/|youtu\.be\/|\/v\/|\/watch\?v=|&v=|&vi=|v=|\/d\/|\/u\/\d\/|\/user\/[^\/]+\/[^\/]+\/|\/YTS(?:\/)?\w?\/?|\/v2\/watch\?v=)([^"&?\/\s]{11})/);
-           var videoId = videoIdMatch ? videoIdMatch[1] : notYT(youtubeLink);
-           extractedText = videoId
-           JS.deleteItemVI(videoId)
-           url2 = JS.getInstance()+"/api/v1/videos/"+videoId
-	   /*JS.httpRequest("GET", url2, function(response) {
-                            var name2 = processData(response);
-                            console.log(name2);
-                            pageStack.push(Qt.resolvedUrl("Player.qml"), {
-                                videoId: videoId,
-                                name: name2
-                            });
-                        });*/
-
-           //JS.httpRequest("GET", url2, processData)
-           //console.log(name2);
-	   pageStack.push(Qt.resolvedUrl("Player.qml"),{videoId: extractedText })
-           /*if (name2 !== "") {
-		pageStack.push(Qt.resolvedUrl("Player.qml"),{videoId: extractedText, name: name2 })
-	   } else {
-		console.log(name2);
-	   }*/
-       }
-
-       function notYT(link) {
-           //var url = "https://arch-linux.cz/w/nvBuFGYwErFHc2tfhwU14r";
-           var link2 = link.split("w/")[1];
-
-           console.log(link2);
-           pageStack.push(Qt.resolvedUrl("Playertest.qml"),{videoId: link2, name: ""})
-
-       }
-
-       function openPage(page, arguments) {
-           __silica_applicationwindow_instance.activate()
-           console.log("D-Bus: activate page " + page + " 
-(current: " + pageStack.currentPage.objectName + ")");
-           if ((page === "Tracker" || page === "Downloads") && 
-page !== pageStack.currentPage.objectName) {
-               pageStack.push(Qt.resolvedUrl("%1.qml".arg(page)), 
-arguments)
-           }
-       }
-    }
+    property string inputUrl
 
     SilicaFlickable {
         anchors.fill: parent
-        
+
         // PullDownMenu and PushUpMenu must be declared in SilicaFlickable, SilicaListView or SilicaGridView
         /*PullDownMenu {
             MenuItem {
@@ -154,8 +36,8 @@ arguments)
                 onClicked: pageStack.push(Qt.resolvedUrl("Trending.qml"), {type: "music"})
             }
             MenuItem {
-                text: qsTr("Trending")
-                onClicked: pageStack.push(Qt.resolvedUrl("Trending.qml"), {type: ""})
+                text: qsTr("yt-dlp player")
+                onClicked: pageStack.push(Qt.resolvedUrl("SearchURL.qml"))
             }
         }*/
 
@@ -170,7 +52,7 @@ arguments)
                 model: tabModel
             }
 
-            model: [sr,srch,fv,hs]
+            model: [sr,srch,url,fv,hs]
             Component {
                 id: sr
                 TabItem {
@@ -203,6 +85,23 @@ arguments)
                     VerticalScrollDecorator {}
                 }
             }
+            Component {
+                id: url
+                TabItem {
+                    flickable: urlView.flickable
+                    URL {
+                        id: urlView
+                        //topMargin: tabs.tabBarHeight
+                        //header: Item { width: 1; height: tabs.tabBarHeight + column.height }
+                        Connections {
+                            target: root
+                            //onReset: _callHistoryView.reset()
+                        }
+                    }
+                    VerticalScrollDecorator {}
+                }
+            }
+
             Component {
                 id: fv
                 TabItem {
@@ -266,6 +165,9 @@ arguments)
             }
             ListElement {
                 title: qsTr("Search channel")
+            }
+            ListElement {
+                title: qsTr("Load URL")
             }
             ListElement {
                 title: qsTr("Favorites")

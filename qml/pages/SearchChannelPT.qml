@@ -21,7 +21,7 @@ Page {
         var obj = JSON.parse(json);
         var r="";
         for(var i = 0; i < obj.data.length; i++) {
-            r = { "id": obj.data[i].name, "author": obj.data[i].displayName, "thumbnail": "https:"+obj.data[i].ownerAccount.avatars[0].path }
+            r = { "id": obj.data[i].name, "author": obj.data[i].displayName, "thumbnail": obj.data[i].ownerAccount.avatars[1].fileUrl }
             myJSModel.append(r)
         }
 
@@ -56,13 +56,13 @@ Page {
             delegate: ListItem {
                 id: column
                 width: parent.width
-                contentHeight: Theme.itemSizeMedium
+                contentHeight: Theme.itemSizeExtraLarge
 
                 Image {
                     id: img
                     source: thumbnail
-                    width: Theme.iconSizeLarge - 10
-                    height: Theme.iconSizeLarge - 10
+                    width: Theme.iconSizeExtraLarge
+                    height: Theme.iconSizeExtraLarge
                     anchors {
                         left: parent.left
                         leftMargin: Theme.horizontalPageMargin
@@ -76,6 +76,9 @@ Page {
                     width: column.width - 92
                     font.pixelSize: Theme.fontSizeSmall
                     truncationMode: TruncationMode.Fade
+                    maximumLineCount: 3
+                    wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+
                     anchors {
                         left: img.right
                         leftMargin: Theme.horizontalPageMargin
@@ -85,22 +88,6 @@ Page {
                     }
                 }
 
-//                menu: ContextMenu {
-//                    MenuItem {
-//                        text: qsTr("Otevřít externě")
-//                        onClicked: {
-//                            link = "https://iteroni.com/watch?v="+list.model.get(index).id
-//                            Qt.openUrlExternally(link);
-//                        }
-//                    }
-//                    MenuItem {
-//                        text: qsTr("Otevřít externě pouze zvuk")
-//                        onClicked: {
-//                            link = "https://iteroni.com/watch?v="+list.model.get(index).id+"&listen=1"
-//                            Qt.openUrlExternally(link);
-//                        }
-//                    }
-//                }
                 onClicked: {
                     pageStack.push(Qt.resolvedUrl("ChannelLatestPT.qml"), {authorId: list.model.get(index).id, authorName: list.model.get(index).author});
                 }
