@@ -189,7 +189,7 @@ function pData(data) {
     return url;
 }
 
-function getInstance2() {
+/*function getInstance2() {
     var url = "https://api.invidious.io/instances.json?sort_by=type,health"
     var firstItemUrl = httpRequest("GET", url, pData)
     //var jsonObject = JSON.parse(jsonData)
@@ -207,10 +207,9 @@ function getInstance(callback) {
             console.error("Callback is not defined");
         }
     });
-}
+}*/
 
 function getInvInstance() {
-//	return "https://invidious.reallyaweso.me"
 //	return "https://invidious.nerdvpn.de"
 //	return "https://invidious.f5.si"
 //	return "https://invidious.privacyredirect.com"
@@ -219,4 +218,59 @@ function getInvInstance() {
 //	return "https://invidious.privacyredirect.com"
 //	return "https://invidious.perennialte.ch"
     return "https://invidious.reallyaweso.me"
+}
+
+function getItemPosition(id) {
+    var db = LocalStorage.openDatabaseSync("PlayerDB", "1.0", "Player DB", 100000)
+    var pos = 0
+
+    db.transaction(function(tx) {
+        var rs = tx.executeSql('SELECT position FROM videos WHERE id=?', [id])
+        if (rs.rows.length > 0)
+            pos = rs.rows.item(0).position
+    })
+
+    return pos
+}
+
+function updateItemPosition(id, position) {
+    var db = LocalStorage.openDatabaseSync("PlayerDB", "1.0", "Player DB", 100000)
+
+    db.transaction(function(tx) {
+        tx.executeSql('CREATE TABLE IF NOT EXISTS videos(id TEXT PRIMARY KEY, position INTEGER)');
+
+        var res = tx.executeSql('UPDATE videos SET position=? WHERE id=?', [position, id])
+
+        if (res.rowsAffected === 0) {
+            tx.executeSql(
+                'INSERT INTO videos (id, position) VALUES (?, ?)',
+                [id, position]
+            )
+        }
+
+    })
+}
+
+function formatSeconds(seconds) {
+    var h = Math.floor(seconds / 3600)
+    var m = Math.floor((seconds % 3600) / 60)
+    var s = seconds % 60
+
+    // when you want h:mm:ss
+    var hh = h > 0 ? h + ":" : ""
+    var mm = (h > 0 && m < 10 ? "0" : "") + m
+    var ss = (s < 10 ? "0" : "") + s
+
+    return hh + mm + ":" + ss
+}
+
+function processData(data, imageElement) {
+    var json = data;
+    var obj = JSON.parse(json);
+    //var ="";
+    if (obj.thumbnailPath.length > 0) {
+        imageurl = "https://peertube.arch-linux.cz" + obj.thumbnailPath;
+        imageElement.source = imageurl;
+        return imageurl;
+    }
 }
