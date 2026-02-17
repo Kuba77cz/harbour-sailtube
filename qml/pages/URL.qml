@@ -38,7 +38,7 @@ TabItem {
                 left: parent.left
                 right: parent.right
             }
-            placeholderText: qsTr("Looking for ...")
+            placeholderText: qsTr("Paste link")
             text: inputUrl
             //inputMethodHints: Qt.ImhNoPredictiveText
             EnterKey.onClicked: {
