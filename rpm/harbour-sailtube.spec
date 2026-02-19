@@ -1,7 +1,7 @@
 Name:       harbour-sailtube
 
 Summary:    My Sailfish OS Application
-Version:    0.1
+Version:    0.6
 Release:    1
 License:    LICENSE
 BuildArch:  noarch
@@ -9,6 +9,7 @@ URL:        http://example.org/
 Source0:    %{name}-%{version}.tar.bz2
 Requires:   sailfishsilica-qt5 >= 0.10.9
 Requires:   libsailfishapp-launcher
+Requires:   nodejs
 BuildRequires:  pkgconfig(sailfishapp) >= 1.0.3
 BuildRequires:  pkgconfig(Qt5Core)
 BuildRequires:  pkgconfig(Qt5Qml)
@@ -40,4 +41,6 @@ desktop-file-install --delete-original         --dir %{buildroot}%{_datadir}/app
 %defattr(0644,root,root,-)
 %{_datadir}/%{name}
 %{_datadir}/applications/%{name}.desktop
+%{_datadir}/applications/%{name}-open-url.desktop
 %{_datadir}/icons/hicolor/*/apps/%{name}.png
+%{_datadir}/dbus-1/services/cz.kuba77.SailTube.service
