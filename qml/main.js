@@ -1,46 +1,26 @@
 function httpRequest(requestType, url, callback, params) {
     var request = new XMLHttpRequest();
+
     request.onreadystatechange = function() {
         if (request.readyState === 4) {
-            if (request.status === 200) {
-//                console.log("Get response:", request.responseText);
-                callback(request.responseText);
-            } else {
-                callback("error");
-            }
+            //console.log("STATUS:", request.status)
+            //console.log("RESPONSE:", request.responseText)
+            callback(request.status, request.responseText);
         }
     }
-    request.open(requestType, url);
-//    request.setRequestHeader('Accept-Encoding', 'gzip, deflate, bzip2, compress');
-//    if(requestType === "GET") {
-//        request.setRequestHeader('User-Agent', 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0');
-//        request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-//    } else {
-//        request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-//    }
-    console.log("send url", url);
+
+    request.open(requestType, url, true);
+
+    request.setRequestHeader("Accept", "text/html")
+    //request.setRequestHeader("Accept", "application/json");
+    request.setRequestHeader("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) Gecko/20100101 Firefox/115.0");
+    //request.setRequestHeader("Referer", "https://yewtu.be/");
+    //request.setRequestHeader("Origin", "https://yewtu.be");
+
     request.send(params);
 }
 
-function httpRequest1(method, url) {
-    return new Promise(function(resolve, reject) {
-        var xhr = new XMLHttpRequest();
-        xhr.open(method, url);
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === XMLHttpRequest.DONE) {
-                if (xhr.status === 200) {
-                    resolve(xhr.responseText);
-                } else {
-                    reject(xhr.statusText);
-                }
-            }
-        };
-        xhr.send();
-    });
-}
-
-
-function httpRequest2(method, url, callback) {
+function httpRequestPT(method, url, callback) {
     var xhr = new XMLHttpRequest();
     xhr.open(method, url, true); // `true` makes the request asynchronous
     xhr.onreadystatechange = function() {
@@ -56,8 +36,53 @@ function httpRequest2(method, url, callback) {
     xhr.send();
 }
 
-function search(query,type) { //iteroni.com
-    return url = getInvInstance()+"/api/v1/search?q="+query+"&region=CZ&type="+type
+function fetchChannelFromVideo(videoId, callback) {
+    var url = getInvInstance()+"/search?q=" + videoId + "&type=video";
+    var request = new XMLHttpRequest();
+
+    request.onreadystatechange = function() {
+        if (request.readyState === 4) {
+
+            if (request.status !== 200) {
+                console.log("HTTP ERROR", request.status);
+                callback(null);
+                return;
+            }
+
+            var html = request.responseText;
+
+            // find first channel link
+            var matchId = html.match(/href="\/channel\/([^"]+)"/);
+            var matchName = html.match(/<p class="channel-name"[^>]*>([\s\S]*?)<\/p>/);
+
+            if (!matchId || !matchName) {
+                console.log("Channel not found in search results");
+                callback(null);
+                return;
+            }
+
+            var channelId = matchId[1].toString();
+
+            var channelName = matchName[1]
+            .replace(/<[^>]+>/g, "")
+            .replace(/&amp;/g, "&")
+            .replace(/&nbsp;/g, " ")
+            .replace(/\n/g, "")
+            .trim();
+
+            callback({
+                         channelId: channelId,
+                         channelName: channelName
+                     });
+        }
+    };
+
+    request.open("GET", url, true);
+
+    request.setRequestHeader("Accept", "text/html");
+    request.setRequestHeader("User-Agent", "Mozilla/5.0 (X11; Linux x86_64)");
+
+    request.send();
 }
 
 function getDatabase() {
@@ -70,8 +95,8 @@ function addItem(videoid,title,service) {
     var rs = ""
 
     db.transaction(function(tx) {
-            tx.executeSql('CREATE TABLE IF NOT EXISTS history(videoid TEXT, title TEXT, service INTEGER)');
-            rs = tx.executeSql('INSERT INTO history VALUES(?,?,?)', [videoid,title,service]);
+        tx.executeSql('CREATE TABLE IF NOT EXISTS history(videoid TEXT, title TEXT, service INTEGER)');
+        rs = tx.executeSql('INSERT INTO history VALUES(?,?,?)', [videoid,title,service]);
 
         if (rs.rowsAffected > 0) {
             res = "OK";
@@ -123,8 +148,8 @@ function getAllItems() {
     db.transaction(function(tx) {
         var rs = tx.executeSql('SELECT rowid, videoid, title, service FROM history ORDER BY rowid DESC');
         for(var i = 0; i < rs.rows.length; ++i) {
-            stat = { "rowid": rs.rows.item(i).rowid, "videoid": 
-rs.rows.item(i).videoid, "title": rs.rows.item(i).title, "service": rs.rows.item(i).service}
+            stat = { "rowid": rs.rows.item(i).rowid, "videoid":
+                rs.rows.item(i).videoid, "title": rs.rows.item(i).title, "service": rs.rows.item(i).service}
             myJSModel.append(stat)
         }
     })
@@ -137,8 +162,8 @@ function addFavItem(videoid,title,service) {
     var rs = ""
 
     db.transaction(function(tx) {
-            tx.executeSql('CREATE TABLE IF NOT EXISTS fav(videoid TEXT, title TEXT, service INTEGER)')
-            rs = tx.executeSql('INSERT INTO fav VALUES(?,?,?)', [videoid,title,service]);
+        tx.executeSql('CREATE TABLE IF NOT EXISTS fav(videoid TEXT, title TEXT, service INTEGER)')
+        rs = tx.executeSql('INSERT INTO fav VALUES(?,?,?)', [videoid,title,service]);
 
         if (rs.rowsAffected > 0) {
             res = "OK";
@@ -174,7 +199,7 @@ function getAllFavItems() {
         var rs = tx.executeSql('SELECT rowid, videoid, title, service FROM fav ORDER BY rowid DESC')
         for(var i = 0; i < rs.rows.length; ++i) {
             stat = { "rowid": rs.rows.item(i).rowid, "videoid":
-rs.rows.item(i).videoid, "title": rs.rows.item(i).title, "service": rs.rows.item(i).service}
+                rs.rows.item(i).videoid, "title": rs.rows.item(i).title, "service": rs.rows.item(i).service}
             myJSModel.append(stat)
         }
     })
@@ -189,35 +214,12 @@ function pData(data) {
     return url;
 }
 
-/*function getInstance2() {
-    var url = "https://api.invidious.io/instances.json?sort_by=type,health"
-    var firstItemUrl = httpRequest("GET", url, pData)
-    //var jsonObject = JSON.parse(jsonData)
-    console.log(firstItemUrl.toString());
-    return firstItemUrl;
+function getInvInstance() {
+    return "https://inv.nadeko.net"
 }
 
-function getInstance(callback) {
-    var url = "https://api.invidious.io/instances.json?sort_by=type,health";
-    httpRequest2("GET", url, function(response) {
-        var firstItemUrl = pData(response);
-        if (callback) {
-            callback(firstItemUrl);
-        } else {
-            console.error("Callback is not defined");
-        }
-    });
-}*/
-
-function getInvInstance() {
-//	return "https://invidious.nerdvpn.de"
-//	return "https://invidious.f5.si"
-//	return "https://invidious.privacyredirect.com"
-//	return "https://nyc1.iv.ggtyler.dev"
-//	return "https://inv.nadeko.net"
-//	return "https://invidious.privacyredirect.com"
-//	return "https://invidious.perennialte.ch"
-    return "https://invidious.reallyaweso.me"
+function getInvInstanceImg() {
+    return "https://invidious.nerdvpn.de"
 }
 
 function getItemPosition(id) {
@@ -243,9 +245,9 @@ function updateItemPosition(id, position) {
 
         if (res.rowsAffected === 0) {
             tx.executeSql(
-                'INSERT INTO videos (id, position) VALUES (?, ?)',
-                [id, position]
-            )
+                        'INSERT INTO videos (id, position) VALUES (?, ?)',
+                        [id, position]
+                        )
         }
 
     })
