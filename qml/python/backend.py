@@ -22,6 +22,9 @@ def _find_ytdlp():
     return None
 
 
+NODE = "/home/.nodejs/bin/node"
+
+
 def get_stream_url(url, mode="video"):
     ytdlp = _find_ytdlp()
     if not ytdlp:
@@ -30,11 +33,7 @@ def get_stream_url(url, mode="video"):
             "error": "yt-dlp not found"
         }
 
-    if mode == "audio":
-        fmt = "bestaudio/best"
-    else:
-        fmt = "best"
-
+    fmt = "bestaudio/best" if mode == "audio" else "best"
     NODE = "/home/.nodejs/bin/node"
 
     def run(cmd):
@@ -48,16 +47,22 @@ def get_stream_url(url, mode="video"):
         return proc.returncode, out.decode("utf-8", errors="ignore"), err.decode("utf-8", errors="ignore")
 
     try:
-        # 1️⃣  normal usage without JS runtime
-        code, out, err = run([ytdlp, "-f", fmt, "-g", url])
+        # 1️⃣ normal run
+        code, out, err = run([
+            ytdlp,
+            "-f", fmt,
+            "-j",
+            url
+        ])
 
         if code != 0:
-            # 2️⃣ fallback with JS runtime
+            # 2️⃣ fallback with node runtime
             code2, out2, err2 = run([
                 ytdlp,
                 "--js-runtimes", f"node:{NODE}",
                 "-f", fmt,
-                "-g", url
+                "-j",
+                url
             ])
 
             if code2 != 0:
@@ -68,17 +73,25 @@ def get_stream_url(url, mode="video"):
 
             out = out2
 
-        stream = out.strip().split("\n")[0]
+        data = json.loads(out.split("\n")[0])
+
+        stream = data.get("url")
+        width = data.get("width")
+        height = data.get("height")
+        duration = data.get("duration")
 
         if not stream:
             return {
                 "ok": False,
-                "error": "yt-dlp returns empty URL"
+                "error": "yt-dlp returned empty stream URL"
             }
 
         return {
             "ok": True,
-            "url": stream
+            "url": stream,
+            "width": width,
+            "height": height,
+            "duration": duration
         }
 
     except Exception as e:
