@@ -58,6 +58,7 @@ Item {
         spacing: Theme.paddingSmall
 
         PageHeader {
+            id: header
             title: root.title
             visible: !root.isFullscreen
         }
@@ -65,11 +66,34 @@ Item {
         Video {
             id: player
             width: parent.width
-            height: root.isFullscreen ? parent.height : parent.height * 0.45
+
+        property bool isVertical: root.videoHeight > root.videoWidth
+
+    property real safeAspect: (root.videoWidth > 0 && root.videoHeight > 0)
+                                 ? root.videoWidth / root.videoHeight
+                                 : 16/9   // fallback
+
+    height: root.isFullscreen
+            ? parent.height
+            : (isVertical
+               ? parent.width / safeAspect   // vertical video: výška podle poměru
+               : parent.width / safeAspect)  // horizontal video: stejné, zachová crop
+
+//height: root.isFullscreen
+        ? parent.height
+        : Math.min(parent.height * 0.7,
+                   isVertical ? parent.width * 16/9 : parent.width * 9/16)
+
+
+        fillMode: isVertical
+                  ? VideoOutput.PreserveAspectFit
+                  : VideoOutput.PreserveAspectCrop
+
             source: root.source
             autoPlay: false
             visible: mode !== "audio"
-
+    anchors.horizontalCenter: parent.horizontalCenter
+    anchors.verticalCenter: parent.verticalCenter   // 🔹 centering fix
             property bool controlsVisible: false
 
             Timer {
@@ -154,11 +178,11 @@ Item {
             //        anchors.fill: parent
             visible: mode === "audio"
             // JS.httpRequest("GET", "https://peertube.arch-linux.cz/api/v1/videos/"+videoId, function(response) { JS.processData(response, thumbnail);})
-            source: service==="1" ? "" : JS.getInvInstance()+"/vi/" + videoId + "/maxres.jpg"
+            source: service==="1" ? "" : JS.getInvInstanceImg()+"/vi/" + videoId + "/maxres.jpg"
             fillMode: Image.PreserveAspectFit
             width: parent.width
             height: parent.height * 0.45
-
+anchors.verticalCenter: parent.verticalCenter
 
 
 
