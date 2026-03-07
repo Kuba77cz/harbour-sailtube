@@ -7,20 +7,20 @@ Page {
     id: page
     property string query
     property string link
-
     property string userRegion: Qt.locale().name.split("_")[1] || "US" // eg. "CZ" or fallback "US"
+    property string domain: JS.getInvInstance()
 
     Component.onCompleted: {
         indicatior.running = true
         var url;
-        var domain = JS.getInvInstance()
         var region = userRegion || "US";
-        url = domain+"/api/v1/search?q="+query+"&region="+region+"&type=videos"
+        //url = domain+"/api/v1/search?q="+query+"&region="+region+"&type=videos"
+        url = domain+"/search?q="+query+"&page=1&date=none&type=video&duration=none&region="+region+"&sort=relevance"
         console.log(url + " ; " + region)
         JS.httpRequest("GET", url, processData)
     }
 
-    function processData(data) {
+    /*    function processData(data) {
         var json = data;
         var obj = JSON.parse(json);
         var r="";
@@ -35,7 +35,70 @@ Page {
 
         indicatior.running = false
         return r;
+    }*/
+
+    function processData(status, data) {
+        if (status !== 200) {
+            console.log("HTTP ERROR")
+            indicatior.running = false
+            return
+        }
+
+        var html = data
+        var blocks = html.split('<div class="h-box">')
+
+        for (var i = 1; i < blocks.length; i++) {
+            var block = blocks[i]
+
+            // video ID
+            var vidMatch = block.match(/href="\/watch\?v=([^"&]+)"/)
+            var vidId = vidMatch ? vidMatch[1].toString() : ""
+
+            // video title
+            var titleMatch = block.match(/<p dir="auto">([\s\S]*?)<\/p>/)
+            var title = titleMatch ? titleMatch[1].toString() : ""
+            title = title.replace(/<[^>]+>/g, "")
+            .replace(/&nbsp;/g, " ")
+            .replace(/\s+/g, " ")
+            .trim()
+
+            // thumbnail
+            var thumbMatch = block.match(/<img[^>]+src="([^"]+)"/)
+            var thumb = thumbMatch ? thumbMatch[1].toString() : ""
+            if (thumb.indexOf("/") === 0)
+                thumb = domain +"/" + thumb
+
+            // channel ID
+            var chMatch = block.match(/href="\/channel\/([^"]+)"/)
+            var chId = chMatch ? chMatch[1].toString() : ""
+
+            // channel name
+            var chNameMatch = block.match(/class="channel-name"[^>]*>([^<]+)/)
+            var chName = chNameMatch ? chNameMatch[1].toString() : ""
+            chName = chName.replace(/<[^>]+>/g, "")
+            .replace(/&nbsp;/g, " ")
+            .replace(/\s+/g, " ")
+            .trim()
+
+            // video length (duration)
+            var lenMatch = block.match(/<p class="length">([\d:]+)<\/p>/)
+            var length = lenMatch ? lenMatch[1].toString() : ""
+
+            if (vidId && title) {
+                myJSModel.append({
+                                     "videoid": vidId,
+                                     "title": title,
+                                     "thumbnail": thumb,
+                                     "id": chId,
+                                     "authorName": chName,
+                                     "videolength": length
+                                 })
+            }
+        }
+
+        indicatior.running = false
     }
+
     BusyIndicator {
         id: indicatior
         running: false
@@ -68,7 +131,7 @@ Page {
 
                 Image {
                     id: img
-                    source: JS.getInvInstance()+"/vi/"+videoid+"/mqdefault.jpg"
+                    source: JS.getInvInstanceImg()+"/vi/"+videoid+"/mqdefault.jpg"
                     width: Theme.iconSizeExtraLarge * 1.5
                     height: Theme.iconSizeExtraLarge * 1.5
                     fillMode: Image.PreserveAspectFit
@@ -100,7 +163,7 @@ Page {
                     Label {
                         id: vlength
                         anchors.centerIn: parent
-                        text: JS.formatSeconds(videolength)
+                        text: videolength //JS.formatSeconds(videolength)
                         font.pixelSize: Theme.fontSizeExtraSmall
                         color: Theme.primaryColor
                     }

@@ -11,7 +11,13 @@ Page {
     property string authorName
     property string videoUrl
     property string origUrl
-    property string domain: JS.getInvInstance()
+    property string domain: JS.getInvInstanceImg()
+
+    function showErrorPage(errText) {
+        pageStack.push("ErrorPage.qml", {
+                           errorText: errText
+                       })
+    }
 
     Component.onCompleted: {
         indicatior.running = true
@@ -34,6 +40,7 @@ Page {
 
             if (!res.ok) {
                 console.log("yt-dlp error:", res.error)
+                showErrorPage("yt-dlp error:\n\n"+res.error)
                 return
             }
 

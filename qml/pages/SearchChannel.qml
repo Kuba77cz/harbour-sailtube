@@ -6,20 +6,69 @@ Page {
     id: page
     property string query
     property string link
+    //property string userRegion: Qt.locale().name.split("_")[1] || "US" // eg. "CZ" or fallback "US"
+    property string domain: JS.getInvInstance()
 
-    property string userRegion: Qt.locale().name.split("_")[1] || "US" // eg. "CZ" or fallback "US"
+    function showErrorPage(errText) {
+        pageStack.push("ErrorPage.qml", {
+                           errorText: errText
+                       })
+    }
 
     Component.onCompleted: {
         indicatior.running = true
         var url;
-        var domain = JS.getInvInstance()
-        var region = userRegion || "US";
-        url = domain+"/api/v1/search?q="+query+"&region="+region+"&type=channel"
+        //var region = userRegion || "US";
+        url = domain+"/search?q="+query+"&page=1&date=none&type=channel&duration=none&sort=relevance"
         console.log(url)
         JS.httpRequest("GET", url, processData)
     }
 
-    function processData(data) {
+
+    function processData(status, data) {
+        if (status !== 200) {
+            console.log("HTTP ERROR")
+            indicatior.running = false
+            return
+        }
+
+        var html = data
+        var blocks = html.split('<div class="h-box">')
+
+        for (var i = 1; i < blocks.length; i++) {
+            var block = blocks[i]
+
+            var idMatch = block.match(/href="\/channel\/([^"]+)"/)
+            var nameMatch = block.match(/class="channel-name"[^>]*>([^<]+)/)
+            var imgMatch = block.match(/<img[^>]+src="([^"]+)"/)
+
+            if (!idMatch || !nameMatch)
+                continue
+
+            var id = idMatch[1].toString()
+            var name = nameMatch[1].toString().trim()
+            name = name.replace(/<[^>]+>/g, "")
+            .replace(/&nbsp;/g, " ")
+            .replace(/\s+/g, " ")
+            .trim()
+            var thumb = imgMatch ? imgMatch[1].toString() : ""
+
+            // Qt 5.6 safe check místo startsWith
+            if (thumb.indexOf("/") === 0)
+                thumb = domain +"/" + thumb
+
+            myJSModel.append({
+                                 "id": id,
+                                 "author": name,
+                                 "thumbnail": thumb
+                             })
+        }
+
+        indicatior.running = false
+        //        return r;
+    }
+
+    /*    function processData(data) {
         var json = data;
         var obj = JSON.parse(json);
         var r="";
@@ -31,6 +80,8 @@ Page {
         indicatior.running = false
         return r;
     }
+*/
+
     BusyIndicator {
         id: indicatior
         running: false

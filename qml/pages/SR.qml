@@ -1,6 +1,7 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Silica.private 1.0
+import Nemo.Configuration 1.0
 
 TabItem {
     id: sr
@@ -25,6 +26,13 @@ TabItem {
 
     anchors.fill: parent
 
+    ConfigurationGroup {
+        id: settings
+        path: "/apps/harbour-sailtube"
+
+        property int positionCb: 0
+    }
+
     BusyIndicator {
         id: indicatior
         running: false
@@ -41,12 +49,12 @@ TabItem {
             flickable: flickable
         }
 
-        contentHeight: column.height
+        //contentHeight: column.height
         anchors.topMargin: 300//sr.height / 8
 
         SearchField {
             id: sf
-            width: page.width
+            width: sr.width
 
             anchors {
                 left: parent.left
@@ -54,21 +62,23 @@ TabItem {
             }
             placeholderText: qsTr("Looking for ...")
             text: ""
-            //inputMethodHints: Qt.ImhNoPredictiveText
+            focus: true
             EnterKey.onClicked: {
                 send()
             }
         }
         ComboBox {
-            //width: page.width
             anchors.top: sf.bottom
             label: "Service"
             id: cbType
-            //currentIndex: 0
+            currentIndex: settings.positionCb
             menu: ContextMenu {
                 MenuItem { text: "Invidious" }
                 MenuItem { text: "YT-DLP" }
                 MenuItem { text: "PeerTube Archlinux.cz" }
+            }
+            onCurrentIndexChanged: {
+                settings.positionCb = cbType.currentIndex
             }
         }
     }

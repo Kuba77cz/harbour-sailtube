@@ -13,8 +13,8 @@ TabItem {
     function send() {
         switch (cbType.currentIndex)
         {
-        case 0: type = 0; pageStack.push(Qt.resolvedUrl("SearchChannel.qml"), {query: sf.text, type2: type }); break;
-        case 1: type = 1; pageStack.push(Qt.resolvedUrl("SearchChannelPT.qml"), {query: sf.text, type2: type }); break;
+        case 0: type = 0; pageStack.push(Qt.resolvedUrl("SearchChannel.qml"), {query: sf.text}); break;
+        case 1: type = 1; pageStack.push(Qt.resolvedUrl("SearchChannelPT.qml"), {query: sf.text}); break;
             //case 2: type = 2; pageStack.push(Qt.resolvedUrl("SearchPT.qml"), {query: sf.text, type2: type }); break;
             //case 3: type = 3; break;
         default: type = 0; break;
@@ -40,12 +40,11 @@ TabItem {
             flickable: flickable
         }
 
-        contentHeight: column.height
         anchors.topMargin: 300//sr.height / 8
 
         SearchField {
             id: sf
-            width: page.width
+            width: sr.width
 
             anchors {
                 left: parent.left
@@ -53,13 +52,13 @@ TabItem {
             }
             placeholderText: qsTr("Looking for ...")
             text: ""
+            focus: true
             //inputMethodHints: Qt.ImhNoPredictiveText
             EnterKey.onClicked: {
                 send()
             }
         }
         ComboBox {
-            //width: page.width
             anchors.top: sf.bottom
             label: "Service"
             id: cbType

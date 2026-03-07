@@ -14,7 +14,7 @@ Page {
         indicatior.running = true
         var url = "https://peertube.arch-linux.cz/api/v1/accounts/archlinuxcz/videos"
         console.log(url)
-        JS.httpRequest("GET", url, processData)
+        JS.httpRequestPT("GET", url, processData)
     }
 
     function processData(data) {

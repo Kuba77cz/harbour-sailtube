@@ -37,6 +37,7 @@ TabItem {
         }
     }
 
+
     function refresh(){
         myJSModel.clear()
         JS.getAllFavItems()
@@ -57,8 +58,6 @@ TabItem {
         VerticalScrollDecorator {
             flickable: flickable
         }
-
-        contentHeight: column.height
 
 
         // Place our content in a Column.  The PageHeader is always placed at the top
@@ -84,9 +83,9 @@ TabItem {
                     source: {
                         if (list.model.get(index).service === 1) {
                             var url = "https://peertube.arch-linux.cz/api/v1/videos/"+videoid
-                            JS.httpRequest("GET", url, function(response) { processData(response, img);});
+                            JS.httpRequestPT("GET", url, function(response) { processData(response, img);});
                         } else {
-                            JS.getInvInstance()+"/vi/"+videoid+"/mqdefault.jpg"
+                            JS.getInvInstanceImg()+"/vi/"+videoid+"/mqdefault.jpg"
                         }
                     }
                     width: Theme.iconSizeExtraLarge * 1.5
@@ -138,10 +137,25 @@ TabItem {
                             }
                         }
                     }
+
                     MenuItem {
                         text: qsTr("Open channel")
                         onClicked: {
-                            pageStack.push(Qt.resolvedUrl("ChannelLatest.qml"), {authorId: list.model.get(index).id, authorName: list.model.get(index).authorName});
+                            if (list.model.get(index).service === 1) {
+                                pageStack.push(Qt.resolvedUrl("ChannelLatestPT.qml"), {authorId: list.model.get(index).id, authorName: list.model.get(index).authorName});
+                            } else {
+                                var videoId = list.model.get(index).videoid;
+                                JS.fetchChannelFromVideo(videoId, function(channelInfo){
+                                    if(channelInfo) {
+                                        pageStack.push(Qt.resolvedUrl("ChannelLatest.qml"), {
+                                                           authorId: channelInfo.channelId,
+                                                           authorName: channelInfo.channelName
+                                                       });
+                                    } else {
+                                        console.log("Channel not found for video", videoId);
+                                    }
+                                });
+                            }
                         }
                     }
                     MenuItem {

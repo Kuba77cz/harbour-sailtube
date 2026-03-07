@@ -15,12 +15,11 @@ Page {
     property bool hasError: false
     property bool backendReady: false
 
-function showErrorPage(errText) {
-    pageStack.push("ErrorPage.qml", {
-        errorText: errText
-    })
-}
-
+    function showErrorPage(errText) {
+        pageStack.push("ErrorPage.qml", {
+                           errorText: errText
+                       })
+    }
 
     Python {
         id: py
@@ -51,10 +50,10 @@ function showErrorPage(errText) {
         property bool loadImage: mode === "audio"
     }
 
-                    ViewPlaceholder {
-                        enabled: page.hasError
-                        text: qsTr("Error loading video")
-                    }
+    ViewPlaceholder {
+        enabled: page.hasError
+        text: qsTr("Error loading video")
+    }
 
     function loadStream() {
         if (!backendReady) {
@@ -73,6 +72,7 @@ function showErrorPage(errText) {
 
                     if (!res) {
                         console.log("❌ backend returned undefined")
+                        showErrorPage("yt-dlp error:\n\n"+res.error)
                         return
                     }
 
@@ -81,7 +81,7 @@ function showErrorPage(errText) {
                         player.source = res.url
                     } else {
                         console.log("❌ yt-dlp error:", res.error)
-                        showErrorPage(res.error)
+                        showErrorPage("yt-dlp error:\n\n"+res.error)
                         page.hasError = true
                     }
                 })

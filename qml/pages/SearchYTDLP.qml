@@ -9,7 +9,11 @@ Page {
     property string query
     property string link
 
-    //property string userRegion: Qt.locale().name.split("_")[1] || "US" // eg. "CZ" or fallback "US"
+    function showErrorPage(errText) {
+        pageStack.push("ErrorPage.qml", {
+                           errorText: errText
+                       })
+    }
 
     Python {
         id: py
@@ -18,7 +22,7 @@ Page {
             importModule("backend", function() {
                 console.log("Python backend loaded")
                 indicatior.running = true
-                search(query)   // <-- až po loadu backendu
+                search(query)   // <-- after backend is loaded
                 print("search query:", query)
             })
         }
@@ -32,6 +36,7 @@ Page {
 
             if (!res.ok) {
                 console.log("yt-dlp search error:", res.error)
+                showErrorPage("yt-dlp error:\n\n"+res.error)
                 return
             }
 
@@ -87,7 +92,7 @@ Page {
 
                 Image {
                     id: img
-                    source: JS.getInvInstance()+"/vi/"+videoid+"/mqdefault.jpg"
+                    source: JS.getInvInstanceImg()+"/vi/"+videoid+"/mqdefault.jpg"
                     width: Theme.iconSizeExtraLarge * 1.5
                     height: Theme.iconSizeExtraLarge * 1.5
                     fillMode: Image.PreserveAspectFit

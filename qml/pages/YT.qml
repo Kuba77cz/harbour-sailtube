@@ -14,6 +14,12 @@ Page {
 
     property bool backendReady: false
 
+    function showErrorPage(errText) {
+        pageStack.push("ErrorPage.qml", {
+                           errorText: errText
+                       })
+    }
+
     Python {
         id: py
         Component.onCompleted: {
@@ -47,6 +53,7 @@ Page {
 
                     if (!res) {
                         console.log("❌ backend returned undefined")
+                        showErrorPage("yt-dlp error:\n\n"+res.error)
                         return
                     }
 
@@ -54,6 +61,7 @@ Page {
                         player.source = res.url
                     } else {
                         console.log("❌ yt-dlp error:", res.error)
+                        showErrorPage("yt-dlp error:\n\n"+res.error)
                     }
                 })
     }

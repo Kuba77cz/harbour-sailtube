@@ -27,12 +27,12 @@ TabItem {
             flickable: flickable
         }
 
-        contentHeight: column.height
+        //        contentHeight: column.height
         anchors.topMargin: 300//sr.height / 8
 
         SearchField {
             id: urlField
-            width: page.width
+            width: url.width
 
             anchors {
                 left: parent.left
@@ -40,6 +40,7 @@ TabItem {
             }
             placeholderText: qsTr("Paste link")
             text: inputUrl
+            focus: true
             //inputMethodHints: Qt.ImhNoPredictiveText
             EnterKey.onClicked: {
                 onClicked: pageStack.push(Qt.resolvedUrl("YT-DLP.qml"), {inputUrl: urlField.text});

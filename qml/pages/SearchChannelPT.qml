@@ -6,14 +6,14 @@ Page {
     id: page
     property string query
     property string link
-    property string type2
+    //property string type2
 
     Component.onCompleted: {
         indicatior.running = true
         var url;
-        url = "https://peertube.arch-linux.cz/api/v1/search/video-channels?search="+query+"&start=0&count=10"
+        url = "https://peertube.arch-linux.cz/api/v1/search/video-channels?search="+query
         console.log(url)
-        JS.httpRequest("GET", url, processData)
+        JS.httpRequestPT("GET", url, processData)
     }
 
     function processData(data) {

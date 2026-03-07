@@ -14,13 +14,12 @@ Page {
         var url;
         url = "https://peertube.arch-linux.cz/api/v1/search/videos?search="+query
         console.log(url)
-        JS.httpRequest("GET", url, processData)
+        JS.httpRequestPT("GET", url, processData)
     }
 
     function processData(data) {
         var json = data;
         var obj = JSON.parse(json);
-        //        console.log(data)
         var r="";
         for(var i = 0; i < obj.total; i++) {
             r = { "videoid": obj.data[i].uuid, "title": obj.data[i].name, "thumbnail":

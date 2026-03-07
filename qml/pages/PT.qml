@@ -22,7 +22,7 @@ Page {
     Component.onCompleted: {
         var baseUrl = "https://peertube.arch-linux.cz"
         var url = baseUrl + "/api/v1/videos/" + videoId
-        JS.httpRequest("GET", url, function(data) {
+        JS.httpRequestPT("GET", url, function(data) {
             var obj = JSON.parse(data)
             if (mode === "audio") {
                 player.source = obj.streamingPlaylists[0].files[3].playlistUrl
