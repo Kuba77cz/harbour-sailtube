@@ -2,21 +2,11 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 
 CoverBackground {
-    Label {
-        id: label
-        anchors.centerIn: parent
+    CoverPlaceholder {
+        id: coverPlaceholder
         text: qsTr("SailTube")
+        icon.width: Theme.iconSizeLarge
+        icon.height: Theme.iconSizeLarge
+        icon.source: "/usr/share/icons/hicolor/172x172/apps/harbour-sailtube.png"
     }
-/*
-    CoverActionList {
-        id: coverAction
-
-        CoverAction {
-            iconSource: "image://theme/icon-cover-next"
-        }
-
-        CoverAction {
-            iconSource: "image://theme/icon-cover-pause"
-        }
-    }*/
 }
